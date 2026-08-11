@@ -1,0 +1,27 @@
+# Dependency directories
+node_modules/
+.venv/
+venv/
+
+# Next.js build output
+.next/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Environment variables
+.env
+.env.local
+*.env.*
+client/.env
+client/.env.local
+server/.env
+server/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

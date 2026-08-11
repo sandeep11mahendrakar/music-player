@@ -1,0 +1,66 @@
+[
+  {
+    "id": "song-001",
+    "title": "Aaja Sanam Madhur Chandni Men",
+    "artist": "Lata Mangeshkar",
+    "filename": "01 - Aaja Sanam Madhur Chandni Men.opus",
+    "spotifyUrl": "https://open.spotify.com/search/aaja%20sanam",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=aaja%20sanam"
+  },
+  {
+    "id": "song-002",
+    "title": "Jane Woh Kaise Log The",
+    "artist": "Mohammed Rafi",
+    "filename": "02 - Jane Woh Kaise Log The.opus",
+    "spotifyUrl": "https://open.spotify.com/search/jane%20woh%20kaise%20log%20the",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=jane%20woh%20kaise%20log%20the"
+  },
+  {
+    "id": "song-003",
+    "title": "Kisi Ki Muskurahaton Se",
+    "artist": "Mukesh",
+    "filename": "03 - Kisi Ki Muskurahaton Se.opus",
+    "spotifyUrl": "https://open.spotify.com/search/kisi%20ki%20muskurahaton%20se",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=kisi%20ki%20muskurahaton%20se"
+  },
+  {
+    "id": "song-004",
+    "title": "Mera Dil Yeh Pukare Aaja",
+    "artist": "Asha Bhosle",
+    "filename": "04 - Mera Dil Yeh Pukare Aaja.opus",
+    "spotifyUrl": "https://open.spotify.com/search/mera%20dil%20yeh%20pukare%20aaja",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=mera%20dil%20yeh%20pukare%20aaja"
+  },
+  {
+    "id": "song-005",
+    "title": "Jane Kahan Mera Jigar Gaya Ji",
+    "artist": "Mukesh",
+    "filename": "05 - Jane Kahan Mera Jigar Gaya Ji.opus",
+    "spotifyUrl": "https://open.spotify.com/search/jane%20kahan%20mera%20jigar%20gaya%20ji",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=jane%20kahan%20mera%20jigar%20gaya%20ji"
+  },
+  {
+    "id": "song-006",
+    "title": "Ajib Dastan Hai Yeh",
+    "artist": "Lata Mangeshkar",
+    "filename": "06 - Ajib Dastan Hai Yeh.opus",
+    "spotifyUrl": "https://open.spotify.com/search/ajib%20dastan%20hai%20yeh",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=ajib%20dastan%20hai%20yeh"
+  },
+  {
+    "id": "song-007",
+    "title": "Abhi Na Jao Chhod Kar",
+    "artist": "Mohammed Rafi, Asha Bhosle",
+    "filename": "07 - Abhi Na Jao Chhod Kar.opus",
+    "spotifyUrl": "https://open.spotify.com/search/abhi%20na%20jao%20chhod%20kar",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=abhi%20na%20jao%20chhod%20kar"
+  },
+  {
+    "id": "song-008",
+    "title": "Ichak Dana Beechak Dana",
+    "artist": "Mohammed Rafi",
+    "filename": "08 - Ichak Dana Beechak Dana.opus",
+    "spotifyUrl": "https://open.spotify.com/search/ichak%20dana%20beechak%20dana",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=ichak%20dana%20beechak%20dana"
+  }
+]
