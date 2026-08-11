@@ -162,6 +162,9 @@ app.use(express.json());
 // Serve static audio files with proper Range request support (built into Express)
 app.use('/audio', express.static(path.join(__dirname, 'public/audio')));
 
+// Serve static scene images
+app.use('/scenes', express.static(path.join(__dirname, 'public/scenes')));
+
 // Phase 4 API endpoint — returns current rotation, song, and sync offset
 app.get('/api/now-playing', (req, res) => {
   const currentRotation = getCurrentRotation();
@@ -181,6 +184,24 @@ app.get('/api/now-playing', (req, res) => {
     listenerCount
   });
 });
+
+// Socket.io for real-time listener count and rotation changes
+let lastRotationId = null;
+
+setInterval(() => {
+  const currentRotation = getCurrentRotation();
+  if (lastRotationId && lastRotationId !== currentRotation.id) {
+    io.emit('rotation_changed', {
+      rotation: {
+        id: currentRotation.id,
+        name: currentRotation.name,
+        displayName: currentRotation.displayName,
+        sceneImage: currentRotation.sceneImage
+      }
+    });
+  }
+  lastRotationId = currentRotation.id;
+}, 10000); // Check every 10 seconds
 
 // Health check
 app.get('/api/health', (req, res) => {
