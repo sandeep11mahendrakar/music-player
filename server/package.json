@@ -1,0 +1,17 @@
+{
+  "name": "deluxe-saloon-server",
+  "version": "1.0.0",
+  "description": "Synced 24/7 web radio playing 90s Hindi/Bollywood songs",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "luxon": "^3.4.4",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
+  }
+}

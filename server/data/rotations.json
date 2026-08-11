@@ -1,0 +1,39 @@
+[
+  {
+    "id": "morning-drive",
+    "name": "morning-drive",
+    "displayName": "सुबह का सफर | Morning Drive",
+    "startHourIST": 6,
+    "endHourIST": 12,
+    "sceneImage": "/scenes/morning-drive.jpg",
+    "songIds": ["song-001", "song-007", "song-008"]
+  },
+  {
+    "id": "afternoon-groove",
+    "name": "afternoon-groove",
+    "displayName": "दोपहर की धूप | Afternoon Groove",
+    "startHourIST": 12,
+    "endHourIST": 17,
+    "sceneImage": "/scenes/afternoon-groove.jpg",
+    "songIds": ["song-002", "song-003", "song-004"]
+  },
+  {
+    "id": "evening-vibes",
+    "name": "evening-vibes",
+    "displayName": "शाम की महक | Evening Vibes",
+    "startHourIST": 17,
+    "endHourIST": 22,
+    "sceneImage": "/scenes/evening-vibes.jpg",
+    "songIds": ["song-005", "song-006", "song-001"]
+  },
+  {
+    "id": "highway-raat",
+    "name": "highway-raat",
+    "displayName": "हाईवे रात | Highway Raat",
+    "startHourIST": 22,
+    "endHourIST": 5,
+    "sceneImage": "/scenes/highway-raat.jpg",
+    "songIds": ["song-002", "song-003", "song-007", "song-008"],
+    "wrapAround": true
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "song-001",
+    "title": "Tum Se Hi",
+    "artist": "Mohit Chauhan",
+    "filename": "tum-se-hi.mp3",
+    "duration": 264,
+    "spotifyUrl": "https://open.spotify.com/search/tum%20se%20hi",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=tum%20se%20hi"
+  },
+  {
+    "id": "song-002",
+    "title": "Chaiyya Chaiyya",
+    "artist": "Sukhwinder Singh",
+    "filename": "chaiyya-chaiyya.mp3",
+    "duration": 358,
+    "spotifyUrl": "https://open.spotify.com/search/chaiyya%20chaiyya",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=chaiyya%20chaiyya"
+  },
+  {
+    "id": "song-003",
+    "title": "Dil Se Re",
+    "artist": "A.R. Rahman",
+    "filename": "dil-se-re.mp3",
+    "duration": 375,
+    "spotifyUrl": "https://open.spotify.com/search/dil%20se%20re",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=dil%20se%20re"
+  },
+  {
+    "id": "song-004",
+    "title": "Kuch Kuch Hota Hai",
+    "artist": "Udit Narayan, Alka Yagnik",
+    "filename": "kuch-kuch-hota-hai.mp3",
+    "duration": 326,
+    "spotifyUrl": "https://open.spotify.com/search/kuch%20kuch%20hota%20hai",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=kuch%20kuch%20hota%20hai"
+  },
+  {
+    "id": "song-005",
+    "title": "Bole Chudiyan",
+    "artist": "Udit Narayan, Alka Yagnik",
+    "filename": "bole-chudiyan.mp3",
+    "duration": 392,
+    "spotifyUrl": "https://open.spotify.com/search/bole%20chudiyan",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=bole%20chudiyan"
+  },
+  {
+    "id": "song-006",
+    "title": "Mehndi Laga Ke Rakhna",
+    "artist": "Udit Narayan, Alka Yagnik",
+    "filename": "mehndi-laga-ke.mp3",
+    "duration": 445,
+    "spotifyUrl": "https://open.spotify.com/search/mehndi%20laga%20ke",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=mehndi%20laga%20ke"
+  },
+  {
+    "id": "song-007",
+    "title": "Pehla Nasha",
+    "artist": "Udit Narayan, Sadhana Sargam",
+    "filename": "pehla-nasha.mp3",
+    "duration": 355,
+    "spotifyUrl": "https://open.spotify.com/search/pehla%20nasha",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=pehla%20nasha"
+  },
+  {
+    "id": "song-008",
+    "title": "Tujhe Dekha To",
+    "artist": "Kumar Sanu",
+    "filename": "tujhe-dekha-to.mp3",
+    "duration": 332,
+    "spotifyUrl": "https://open.spotify.com/search/tujhe%20dekha%20to",
+    "youtubeMusicUrl": "https://music.youtube.com/search?q=tujhe%20dekha%20to"
+  }
+]
