@@ -10,6 +10,7 @@ venv/
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
 
 # Environment variables
 .env
@@ -20,8 +21,21 @@ client/.env.local
 server/.env
 server/.env.local
 
-# Logs
+# Logs and temp files
 *.log
+*.tmp
+*.swp
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+
+# Python caches
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+
+# Build output
+dist/
+build/
+target/
+.gradle/
