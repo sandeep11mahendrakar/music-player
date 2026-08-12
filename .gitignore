@@ -1,41 +1,7 @@
-# Dependency directories
-node_modules/
-.venv/
-venv/
-
-# Next.js build output
-.next/
-
-# OS and editor files
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Environment variables
-.env
-.env.local
-*.env.*
-client/.env
-client/.env.local
-server/.env
-server/.env.local
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# Python caches
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-
-# Build output
+﻿node_modules/
 dist/
-build/
-target/
-.gradle/
+.env
+.env.*
+!.env.example
+*.log
+.git/

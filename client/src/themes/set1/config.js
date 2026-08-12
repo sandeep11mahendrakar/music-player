@@ -1,0 +1,23 @@
+﻿import background from './background.png';
+import hero from './hero.png';
+
+const config = {
+  id: 'set1',
+  name: 'Black & White Bollywood',
+  playlistUrl: 'https://youtube.com/playlist?list=PLWxAXdt3DK0w',
+  playlistLabel: 'Vintage playlist',
+  background,
+  hero,
+  customTitle: 'BLACK & WHITE',
+  customSubtext: 'BOLLYWOOD',
+  tagline: 'A vintage cinematic soundscape for synchronized listening.',
+  playerBlur: '16px',
+  accent: '#f5f0e2',
+  overlay: 'rgba(8, 8, 12, 0.64)',
+  overlayStrength: 0.82,
+  description: 'Classic Hindi cinema with a monochrome soul.',
+};
+
+export default config;
+
+

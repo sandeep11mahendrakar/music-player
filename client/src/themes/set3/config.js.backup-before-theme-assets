@@ -1,0 +1,21 @@
+import background from './background.svg';
+import hero from './hero.svg';
+
+const config = {
+  id: 'set3',
+  name: 'Sunset Reverie',
+  playlistUrl: 'https://music.youtube.com/playlist?list=PL3',
+  playlistLabel: 'Dream pop selection',
+  background,
+  hero,
+  customTitle: 'SUNSET',
+  customSubtext: 'REVERIE',
+  tagline: 'A warm cinematic dusk for mellow rhythms.',
+  playerBlur: '20px',
+  accent: '#ffd5b3',
+  overlay: 'rgba(10, 6, 17, 0.58)',
+  overlayStrength: 0.72,
+  description: 'Soft golden hour ambience with modern elegance.',
+};
+
+export default config;

@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { themes, defaultThemeId } from './themes/registry';
+import ThemeShell from './components/ThemeShell';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 const USE_YOUTUBE_STREAM = import.meta.env.VITE_USE_YOUTUBE_STREAM === 'true';
@@ -16,46 +18,159 @@ export default function App() {
   const [offset, setOffset] = useState(0);
   const [listenerCount, setListenerCount] = useState(0);
   const [status, setStatus] = useState('Loading live radio...');
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [youtubePlaylist, setYoutubePlaylist] = useState(null);
-  const [youtubeEntry, setYoutubeEntry] = useState(null);
   const [selectedYoutubeIndex, setSelectedYoutubeIndex] = useState(null);
   const [manualYoutubeSelection, setManualYoutubeSelection] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState(defaultThemeId);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [themeTransition, setThemeTransition] = useState(false);
+  const [lyrics, setLyrics] = useState(null);
 
-  const sceneImage = useMemo(() => {
-    if (!rotation?.sceneImage) return '';
-    return rotation.sceneImage.startsWith('http') ? rotation.sceneImage : `${BACKEND_URL}${rotation.sceneImage}`;
-  }, [rotation]);
+  const theme = useMemo(() => themes.find((item) => item.id === activeThemeId) || themes[0], [activeThemeId]);
+  const currentSong = USE_YOUTUBE_STREAM ? youtubePlaylist?.entries?.[selectedYoutubeIndex] || song : song;
+  const songDuration = currentSong?.duration || 0;
+  const songThumbnail = currentSong?.thumbnail || '';
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchLyrics() {
+      if (!USE_YOUTUBE_STREAM || !currentSong?.id) {
+        setLyrics(null);
+        return;
+      }
+
+      setLyrics(null);
+
+      try {
+        const response = await fetch(
+          `${BACKEND_URL}/api/youtube-lyrics/${encodeURIComponent(currentSong.id)}`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Lyrics request failed: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        if (data?.available && data?.lyrics?.plainText) {
+          setLyrics(data.lyrics);
+        } else {
+          setLyrics(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn(
+            'Lyrics unavailable:',
+            error
+          );
+          setLyrics(null);
+        }
+      }
+    }
+
+    fetchLyrics();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSong?.id]);
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      setOffset(audio.currentTime || 0);
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
 
   useEffect(() => {
     if (!USE_YOUTUBE_STREAM || !youtubePlaylist || youtubePlaylist.entries.length === 0) {
-      setYoutubeEntry(null);
       setSelectedYoutubeIndex(null);
       setManualYoutubeSelection(false);
       return;
     }
 
     if (manualYoutubeSelection && selectedYoutubeIndex !== null) {
-      setYoutubeEntry(youtubePlaylist.entries[selectedYoutubeIndex] || null);
       return;
     }
 
     setSelectedYoutubeIndex(0);
-    setYoutubeEntry(youtubePlaylist.entries[0]);
   }, [youtubePlaylist]);
 
   useEffect(() => {
     fetchNowPlaying();
-    if (USE_YOUTUBE_STREAM) {
-      fetchYoutubePlaylist();
-    }
     const interval = setInterval(fetchNowPlaying, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  async function fetchYoutubePlaylist() {
+  useEffect(() => {
+    if (!USE_YOUTUBE_STREAM) return;
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute('src');
+      audio.load();
+    }
+    setIsPlaying(false);
+    setManualYoutubeSelection(false);
+    setSelectedYoutubeIndex(null);
+    fetchYoutubePlaylist(activeThemeId);
+  }, [activeThemeId]);
+
+  useEffect(() => {
+    if (!USE_YOUTUBE_STREAM) return;
+    const audio = audioRef.current;
+    if (!audio || !currentSong?.id) return;
+
+    const src = `${BACKEND_URL}/stream/youtube/${currentSong.id}`;
+    if (audio.src !== src) {
+      const wasPlaying = !audio.paused;
+      audio.src = src;
+      audio.load();
+      if (wasPlaying) {
+        audio.play().catch((err) => {
+          console.warn('Auto-continue playback failed:', err);
+          setIsPlaying(false);
+        });
+      }
+    }
+  }, [currentSong?.id]);
+
+  async function fetchYoutubePlaylist(themeId) {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/youtube-playlist`);
+      const res = await fetch(`${BACKEND_URL}/api/youtube-playlist?themeId=${themeId || activeThemeId}`);
       if (!res.ok) {
         const msg = await res.text();
         throw new Error(`YouTube playlist fetch failed: ${msg}`);
@@ -65,14 +180,11 @@ export default function App() {
         throw new Error('YouTube playlist contains no valid entries.');
       }
       setYoutubePlaylist(data);
-      setSelectedYoutubeIndex(0);
-      setYoutubeEntry(data.entries[0]);
-      setStatus('YouTube playlist loaded. Click Play to start audio.');
+      setStatus('YouTube playlist loaded.');
     } catch (error) {
       console.error('Unable to fetch YouTube playlist:', error);
       setStatus('Unable to load YouTube playlist.');
       setYoutubePlaylist(null);
-      setYoutubeEntry(null);
     }
   }
 
@@ -82,13 +194,13 @@ export default function App() {
     setSelectedYoutubeIndex(normalized);
     setManualYoutubeSelection(true);
     const selected = youtubePlaylist.entries[normalized];
-    setYoutubeEntry(selected);
 
     const audio = audioRef.current;
     if (audio) {
       const src = `${BACKEND_URL}/stream/youtube/${selected.id}`;
       if (audio.src !== src) {
         audio.src = src;
+        audio.load();
       }
       audio.currentTime = 0;
       try {
@@ -101,13 +213,6 @@ export default function App() {
         setStatus('Live stream ready; click Play to start audio.');
       }
     }
-  }
-
-  async function handlePlaylistClick(videoId) {
-    if (!youtubePlaylist) return;
-    const index = youtubePlaylist.entries.findIndex((entry) => entry.id === videoId);
-    if (index === -1) return;
-    await selectYoutubeByIndex(index);
   }
 
   function handlePrevious() {
@@ -128,9 +233,12 @@ export default function App() {
       setSong(data.song);
       setOffset(data.offset);
       setListenerCount(data.listenerCount ?? 0);
-      setStatus('Live radio data loaded. Click Play to start audio.');
+      setStatus('Live radio data loaded.');
 
-      if (USE_YOUTUBE_STREAM && data.mode === 'youtube') {
+      const audio = audioRef.current;
+      const isYoutubeNow = USE_YOUTUBE_STREAM && data.mode === 'youtube';
+
+      if (isYoutubeNow) {
         if (data.index !== undefined && data.index !== null) {
           setSelectedYoutubeIndex(data.index);
         } else if (data.id && youtubePlaylist?.entries) {
@@ -141,8 +249,6 @@ export default function App() {
         }
       }
 
-      const audio = audioRef.current;
-      const isYoutubeNow = USE_YOUTUBE_STREAM && data.mode === 'youtube';
       if (audio && data.song) {
         const src = isYoutubeNow
           ? data.streamUrl || `${BACKEND_URL}/stream/youtube/${data.id}`
@@ -150,21 +256,13 @@ export default function App() {
             ? `${BACKEND_URL}/audio/${data.song.filename}`
             : '';
 
-        if (src) {
-          if (audio.src !== src) {
-            audio.src = src;
-          }
-          if (!isYoutubeNow || !manualYoutubeSelection) {
-            audio.currentTime = Math.max(0, data.offset);
-          }
+        if (src && audio.src !== src) {
+          audio.src = src;
+          audio.load();
         }
 
-        if (isYoutubeNow && !manualYoutubeSelection) {
-          const playlistIndex = youtubePlaylist?.entries?.findIndex((entry) => entry.id === data.id);
-          if (playlistIndex !== undefined && playlistIndex !== -1) {
-            setSelectedYoutubeIndex(playlistIndex);
-            setYoutubeEntry(youtubePlaylist.entries[playlistIndex]);
-          }
+        if (!isYoutubeNow && !manualYoutubeSelection) {
+          audio.currentTime = Math.max(0, data.offset);
         }
 
         try {
@@ -183,82 +281,72 @@ export default function App() {
     }
   }
 
-  function togglePlay() {
+  async function togglePlay() {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      audio.play();
-      setIsPlaying(true);
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        setStatus('Playing.');
+      } catch (playError) {
+        console.warn('Playback failed:', playError);
+        setIsPlaying(false);
+        setStatus('Unable to play this stream.');
+      }
     } else {
       audio.pause();
       setIsPlaying(false);
     }
   }
 
+  function handlePlayerSeek(value) {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = value;
+    setOffset(value);
+  }
+
+  function handleThemeOpen() {
+    setThemeOpen((state) => !state);
+  }
+
+  function handleThemeSelect(themeId) {
+    setThemeTransition(true);
+    setThemeOpen(false);
+    setTimeout(() => setActiveThemeId(themeId), 120);
+    setTimeout(() => setThemeTransition(false), 520);
+  }
+
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div>
-          <div className="eyebrow">Deluxe Saloon</div>
-          <h1>24/7 Synced Hindi Radio</h1>
-        </div>
-      </header>
-
-      <main className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">Now Live</p>
-          <h2>{rotation?.displayName || 'Loading...'}</h2>
-          <p>A synced 24/7 broadcast of Hindi classics. All listeners hear the same track position.</p>
-
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-label">Current track</div>
-              <div className="stat-value">{song?.title || '...'}</div>
-              <div className="stat-meta">{song?.artist || '...'}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Listener count</div>
-              <div className="stat-value">{listenerCount}</div>
-              <div className="stat-meta">currently tuned in</div>
-            </div>
-          </div>
-
-          <div className="hero-actions">
-            <button onClick={togglePlay}>{isPlaying ? 'Pause' : 'Play'}</button>
-            <button onClick={handlePrevious} disabled={!USE_YOUTUBE_STREAM || selectedYoutubeIndex === null}>Previous</button>
-            <button onClick={handleNext} disabled={!USE_YOUTUBE_STREAM || selectedYoutubeIndex === null}>Next</button>
-            <span>Live offset: {formatTime(offset)} / {song ? formatTime(song.duration) : '00:00'}</span>
-          </div>
-          {USE_YOUTUBE_STREAM && youtubeEntry && (
-            <div className="hero-meta">
-              <div>YouTube stream: {youtubeEntry.title}</div>
-              <div>Artist: {youtubeEntry.artist}</div>
-              <div>Video ID: {youtubeEntry.id}</div>
-            </div>
-          )}
-          {USE_YOUTUBE_STREAM && youtubePlaylist && (
-            <div className="playlist-list">
-              <h3>YouTube Playlist</h3>
-              <ul>
-                {youtubePlaylist.entries.map((entry, index) => (
-                  <li key={entry.id}>
-                    <button type="button" onClick={() => handlePlaylistClick(entry.id)}>
-                      {entry.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <p className="status-text">{status}</p>
-        </div>
-
-        <div className="hero-image-wrapper">
-          {sceneImage ? <img src={sceneImage} alt={rotation?.displayName || 'Scene'} /> : <div className="hero-image-placeholder">Scene image</div>}
-        </div>
-      </main>
-
-      <audio ref={audioRef} preload="auto" />
+      <ThemeShell
+        theme={theme}
+        themes={themes}
+        now={now}
+        currentSong={currentSong}
+        rotation={rotation}
+        listenerCount={listenerCount}
+        status={status}
+        isPlaying={isPlaying}
+        onTogglePlay={togglePlay}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        playerOffset={offset}
+        onPlayerSeek={handlePlayerSeek}
+        songDuration={songDuration}
+        songThumbnail={songThumbnail}
+        lyrics={lyrics}
+        lyricsCurrentTime={offset}
+        onThemeOpen={handleThemeOpen}
+        themeOpen={themeOpen}
+        onThemeSelect={handleThemeSelect}
+        activeThemeId={activeThemeId}
+        themeTransition={themeTransition}
+      />
+      <audio ref={audioRef} preload="metadata" />
     </div>
   );
 }
+
+

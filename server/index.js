@@ -9,12 +9,12 @@ import { DateTime } from 'luxon';
 import { existsSync, readFileSync } from 'fs';
 import { parseFile } from 'music-metadata';
 import { execFileSync, spawn } from 'child_process';
+import { preloadAllThemePlaylists, getAllThemePlaylists, getThemePlaylist } from './services/themePlaylists.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OPUS_SOURCE_DIR = process.env.OPUS_SOURCE_DIR || path.resolve('C:/Users/sandeep/Music/B & W bollywood');
-const YOUTUBE_PLAYLIST_URL = process.env.YOUTUBE_PLAYLIST_URL || 'https://music.youtube.com/playlist?list=PLZeOCguRIBGziBHiPvDtzKWlsAPNeDlzU&si=Xe9Ws62pVYKdf0pF';
 const USE_YOUTUBE_STREAM = process.env.USE_YOUTUBE_STREAM === 'true';
 
 // Load data files
@@ -129,42 +129,6 @@ function buildYoutubeEntry(entry) {
   };
 }
 
-function loadYoutubePlaylist() {
-  console.log('Loading YouTube playlist metadata from', YOUTUBE_PLAYLIST_URL);
-
-  const rawJson = execFileSync('yt-dlp', ['--dump-single-json', '--no-warnings', YOUTUBE_PLAYLIST_URL], {
-    encoding: 'utf8',
-    maxBuffer: 50 * 1024 * 1024
-  });
-
-  const playlistData = JSON.parse(rawJson);
-  const entries = Array.isArray(playlistData.entries) ? playlistData.entries.filter(Boolean) : [];
-
-  const validEntries = entries
-    .filter((entry) => entry && entry.id && !entry.is_live && typeof entry.duration === 'number' && entry.duration > 0)
-    .map(buildYoutubeEntry);
-
-  if (validEntries.length === 0) {
-    throw new Error('YouTube playlist contains no valid entries.');
-  }
-
-  youtubePlaylist = validEntries;
-  youtubeCurrentIndex = 0;
-
-  const playlist = {
-    title: playlistData.title || 'YouTube Playlist',
-    url: YOUTUBE_PLAYLIST_URL,
-    entries: validEntries
-  };
-
-  youtubePlaylistCache = {
-    playlist,
-    fetchedAt: Date.now()
-  };
-  youtubeEntryMap = new Map(validEntries.map((entry) => [entry.id, entry]));
-  console.log(`Loaded ${validEntries.length} YouTube playlist entries.`);
-  return playlist;
-}
 
 function getCachedYoutubePlaylist(forceRefresh = false) {
   const now = Date.now();
@@ -373,20 +337,6 @@ app.get('/audio/:filename', (req, res, next) => {
   });
 });
 
-app.get('/api/youtube-playlist', (req, res) => {
-  if (!USE_YOUTUBE_STREAM) {
-    return res.status(400).json({ error: 'YouTube streaming is not enabled on this server.' });
-  }
-
-  try {
-    const forceRefresh = req.query.refresh === 'true';
-    const playlist = getCachedYoutubePlaylist(forceRefresh);
-    res.json(playlist);
-  } catch (error) {
-    console.error('Unable to load YouTube playlist:', error);
-    res.status(500).json({ error: error.message || 'Unable to load YouTube playlist metadata.' });
-  }
-});
 
 app.post('/api/youtube/select/:videoId', (req, res) => {
   if (!USE_YOUTUBE_STREAM) {
@@ -619,7 +569,6 @@ async function startServer() {
 
   try {
     if (USE_YOUTUBE_STREAM) {
-      loadYoutubePlaylist();
     }
   } catch (error) {
     console.error('Unable to initialize YouTube playlist:', error);
@@ -640,8 +589,422 @@ async function startServer() {
     console.log(`Listener count: ${listenerCount}`);
   });
 }
+// ========================================================
+// MULTI-THEME PLAYLIST ROUTES
+// ========================================================
+app.get('/api/all-playlists', (_req, res) => {
+  const themes = getAllThemePlaylists();
+  const totalSongs = Object.values(themes).reduce(
+    (sum, playlist) => sum + (playlist?.entries?.length || 0),
+    0
+  );
+  res.json({ ok: true, themes, totalSongs });
+});
+
+app.get('/api/youtube-playlist', (req, res) => {
+  const themeId = String(req.query.themeId || 'set1');
+  const playlist = getThemePlaylist(themeId);
+
+  if (!playlist) {
+    return res.status(404).json({ ok: false, error: `Playlist for ${themeId} not found.` });
+  }
+
+  return res.json({ ok: true, ...playlist });
+});
+
+
+
+preloadAllThemePlaylists();
+
+for (const playlist of Object.values(getAllThemePlaylists())) {
+  for (const entry of playlist.entries) {
+    youtubeEntryMap.set(entry.id, entry);
+  }
+}
+
+
 
 startServer().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
+
+/* =========================================================
+   OPTIONAL MONGODB PERSISTENCE
+   Does NOT block the music server if MongoDB is unavailable.
+   ========================================================= */
+
+import('./services/persistence.js')
+  .then(({ initializePersistence }) => initializePersistence())
+  .catch((error) => {
+    console.warn(`MongoDB initialization failed: ${error.message}`);
+  });
+
+if (typeof app !== 'undefined') {
+  app.get('/api/db/status', async (_req, res) => {
+    try {
+      const { getPersistenceStatus } =
+        await import('./services/persistence.js');
+
+      res.json({
+        ok: true,
+        database: 'mongodb',
+        ...getPersistenceStatus(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        ok: false,
+        database: 'mongodb',
+        connected: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.get('/api/db/models', async (_req, res) => {
+    res.json({
+      collections: [
+        'users',
+        'themes',
+        'playlists',
+        'songs',
+        'lyrics',
+        'favorites',
+        'listeningHistory',
+        'userPreferences',
+        'listeningSessions',
+        'appSettings',
+        'playEvents',
+      ],
+    });
+  });
+}
+
+/* =========================================================
+   MONGODB DATA SYNC ROUTES
+   ========================================================= */
+
+if (typeof app !== 'undefined') {
+  app.post('/api/db/sync/youtube', async (req, res) => {
+    try {
+      const { isMongoDBConnected } =
+        await import('./config/database.js');
+
+      if (!isMongoDBConnected()) {
+        return res.status(503).json({
+          ok: false,
+          error: 'MongoDB is not connected.',
+        });
+      }
+
+      const {
+        syncYoutubePlaylistToMongo,
+      } = await import('./services/youtubeMongoSync.js');
+
+      const playlistUrl =
+        req.body?.playlistUrl ||
+        process.env.YOUTUBE_PLAYLIST_URL ||
+        '';
+
+      const themeId =
+        req.body?.themeId ||
+        'set1';
+
+      if (!playlistUrl) {
+        return res.status(400).json({
+          ok: false,
+          error: 'No YouTube playlist URL provided.',
+        });
+      }
+
+      const result = await syncYoutubePlaylistToMongo({
+        playlistUrl,
+        themeId,
+      });
+
+      res.json({
+        ok: true,
+        message: 'YouTube playlist synchronized to MongoDB.',
+        ...result,
+      });
+    } catch (error) {
+      console.error(
+        'MongoDB YouTube sync failed:',
+        error
+      );
+
+      res.status(500).json({
+        ok: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.get('/api/db/playlists', async (_req, res) => {
+    try {
+      const { isMongoDBConnected } =
+        await import('./config/database.js');
+
+      if (!isMongoDBConnected()) {
+        return res.status(503).json({
+          ok: false,
+          error: 'MongoDB is not connected.',
+        });
+      }
+
+      const { Playlist } =
+        await import('./services/persistence.js');
+
+      const playlists = await Playlist.find()
+        .sort({ updatedAt: -1 })
+        .lean();
+
+      res.json({
+        ok: true,
+        count: playlists.length,
+        playlists,
+      });
+    } catch (error) {
+      res.status(500).json({
+        ok: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.get('/api/db/songs', async (req, res) => {
+    try {
+      const { isMongoDBConnected } =
+        await import('./config/database.js');
+
+      if (!isMongoDBConnected()) {
+        return res.status(503).json({
+          ok: false,
+          error: 'MongoDB is not connected.',
+        });
+      }
+
+      const { Song } =
+        await import('./services/persistence.js');
+
+      const limit = Math.min(
+        Math.max(Number(req.query.limit) || 50, 1),
+        500
+      );
+
+      const songs = await Song.find()
+        .sort({ title: 1 })
+        .limit(limit)
+        .lean();
+
+      res.json({
+        ok: true,
+        count: songs.length,
+        songs,
+      });
+    } catch (error) {
+      res.status(500).json({
+        ok: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.get('/api/db/themes', async (_req, res) => {
+    try {
+      const { isMongoDBConnected } =
+        await import('./config/database.js');
+
+      if (!isMongoDBConnected()) {
+        return res.status(503).json({
+          ok: false,
+          error: 'MongoDB is not connected.',
+        });
+      }
+
+      const { Theme } =
+        await import('./services/persistence.js');
+
+      const themes = await Theme.find()
+        .sort({ themeId: 1 })
+        .populate('playlistId')
+        .lean();
+
+      res.json({
+        ok: true,
+        count: themes.length,
+        themes,
+      });
+    } catch (error) {
+      res.status(500).json({
+        ok: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.get('/api/db/history', async (req, res) => {
+    try {
+      const { isMongoDBConnected } =
+        await import('./config/database.js');
+
+      if (!isMongoDBConnected()) {
+        return res.status(503).json({
+          ok: false,
+          error: 'MongoDB is not connected.',
+        });
+      }
+
+      const { ListeningHistory } =
+        await import('./services/persistence.js');
+
+      const limit = Math.min(
+        Math.max(Number(req.query.limit) || 50, 1),
+        500
+      );
+
+      const history = await ListeningHistory.find()
+        .sort({ playedAt: -1 })
+        .limit(limit)
+        .lean();
+
+      res.json({
+        ok: true,
+        count: history.length,
+        history,
+      });
+    } catch (error) {
+      res.status(500).json({
+        ok: false,
+        error: error.message,
+      });
+    }
+  });
+}
+
+/* =========================================================
+   OPTIONAL INITIAL YOUTUBE -> MONGODB SYNC
+   ========================================================= */
+
+setTimeout(async () => {
+  try {
+    const { isMongoDBConnected } =
+      await import('./config/database.js');
+
+    if (!isMongoDBConnected()) {
+      console.log(
+        'MongoDB sync skipped: database unavailable.'
+      );
+      return;
+    }
+
+    const playlistUrl =
+      process.env.YOUTUBE_PLAYLIST_URL || '';
+
+    if (!playlistUrl) {
+      console.log(
+        'MongoDB sync skipped: YOUTUBE_PLAYLIST_URL not configured.'
+      );
+      return;
+    }
+
+    const { syncYoutubePlaylistToMongo } =
+      await import('./services/youtubeMongoSync.js');
+
+    const result = await syncYoutubePlaylistToMongo({
+      playlistUrl,
+      themeId: 'set1',
+    });
+
+    console.log(
+      `MongoDB playlist sync complete: ${result.songCount} songs.`
+    );
+  } catch (error) {
+    console.warn(
+      `MongoDB initial sync skipped: ${error.message}`
+    );
+  }
+}, 3000);
+
+/* =========================================================
+   YOUTUBE LYRICS API
+   ========================================================= */
+
+app.get('/api/youtube-lyrics/:videoId', async (req, res) => {
+  try {
+    const videoId = String(req.params.videoId || '').trim();
+
+    if (!/^[A-Za-z0-9_-]{6,20}$/.test(videoId)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Invalid YouTube video ID.',
+      });
+    }
+
+    const {
+      fetchYoutubeLyrics,
+    } = await import('./services/youtubeLyrics.js');
+
+    const result = await fetchYoutubeLyrics(videoId);
+
+    if (!result.available) {
+      return res.json({
+        ok: true,
+        available: false,
+        videoId,
+        lyrics: null,
+      });
+    }
+
+    /* Persist lyrics when MongoDB is available. */
+    try {
+      const {
+        isMongoDBConnected,
+      } = await import('./config/database.js');
+
+      if (isMongoDBConnected()) {
+        const {
+          saveLyrics,
+        } = await import('./services/mongodb.js');
+
+        await saveLyrics({
+          youtubeVideoId: videoId,
+          language: result.language || 'en',
+          source: result.source,
+          synced: true,
+          plainText: result.plainText,
+          lines: result.lines,
+          lastSyncedAt: new Date(),
+        });
+      }
+    } catch (dbError) {
+      console.warn(
+        `Lyrics MongoDB save skipped: ${dbError.message}`
+      );
+    }
+
+    res.json({
+      ok: true,
+      available: true,
+      videoId,
+      language: result.language,
+      source: result.source,
+      lyrics: {
+        plainText: result.plainText,
+        lines: result.lines,
+      },
+    });
+  } catch (error) {
+    console.error(
+      `Lyrics fetch failed for ${req.params.videoId}:`,
+      error
+    );
+
+    res.status(500).json({
+      ok: false,
+      available: false,
+      error: 'Unable to fetch YouTube lyrics.',
+    });
+  }
+});
+

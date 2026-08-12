@@ -815,3 +815,492 @@ MongoDB
 | Build tooling | Vite | builds the frontend app |
 
 **Current project classification:** React + Node.js + Express + Socket.io + yt-dlp (not full MERN)
+
+---
+
+# POST-IMPLEMENTATION UPDATE — CURRENT PROJECT STATE
+
+The original sections above document the architecture as it stood before the final MongoDB and multi-theme implementation. The following section is the current implementation state and should be treated as the latest project truth where it differs from the earlier notes.
+
+## A. MongoDB IS NOW IMPLEMENTED
+
+MongoDB is no longer absent from the project.
+
+The project now uses:
+
+- MongoDB Community Server locally
+- Mongoose
+- `server/config/database.js`
+- Mongoose models under `server/models/`
+- persistence logic under `server/services/mongodb.js`
+
+Current local database URI:
+
+```text
+mongodb://127.0.0.1:27017/deluxe_saloon
+```
+
+The backend has a database status endpoint:
+
+```text
+GET /api/db/status
+```
+
+A successful response is:
+
+```json
+{
+  "ok": true,
+  "database": "mongodb",
+  "connected": true
+}
+```
+
+### Current MongoDB model layer
+
+The project now contains these models:
+
+- `User`
+- `Theme`
+- `Playlist`
+- `Song`
+- `Lyrics`
+- `Favorite`
+- `ListeningHistory`
+- `UserPreferences`
+- `ListeningSession`
+- `AppSetting`
+- `PlayEvent`
+
+### Why MongoDB was added
+
+MongoDB is the persistence layer for application data. It is not the audio streaming engine.
+
+The separation is:
+
+```text
+React
+  ↓
+Express / Node.js
+  ├── MongoDB / Mongoose → persistent application data
+  └── yt-dlp             → live YouTube metadata + audio resolution
+```
+
+Temporary live stream URLs are not treated as durable database records. Stable YouTube video IDs are the durable song identity.
+
+## B. THIS IS NOW A MERN-BASED PROJECT
+
+The project now contains the four MERN layers:
+
+| Letter | Technology | Current role |
+|---|---|---|
+| M | MongoDB | persistent application/database storage |
+| E | Express | HTTP API and backend routing |
+| R | React | frontend UI and playback controls |
+| N | Node.js | backend runtime and yt-dlp process management |
+
+There are also supporting technologies:
+
+- Vite
+- Socket.io
+- yt-dlp
+- Mongoose
+- dotenv
+- CORS
+- browser HTMLAudioElement
+
+The accurate classification is therefore:
+
+**MERN + Vite + Socket.io + yt-dlp streaming application.**
+
+## C. MULTI-THEME PLAYLIST LOADING IS NOW IMPLEMENTED
+
+The backend no longer needs to use one global playlist as the primary source for all themes.
+
+Each theme owns its playlist URL in:
+
+```text
+client/src/themes/set1/config.js
+client/src/themes/set2/config.js
+client/src/themes/set3/config.js
+client/src/themes/set4/config.js
+```
+
+Current playlist configuration:
+
+```text
+set1 → https://youtube.com/playlist?list=PLWxAXdt3DK0w
+set2 → https://youtube.com/playlist?list=PLJXVSEYu0fWDtJon31Z4NurKfT1qe7s11
+set3 → https://youtube.com/playlist?list=PLFLXWCUsy8nY
+set4 → https://youtube.com/playlist?list=PLWd4gmX2j6dOUpWveHdipQ-vqlPX1A0f1
+```
+
+The backend now reads the theme configurations and preloads every playlist at startup.
+
+### Verified startup counts
+
+```text
+set1: 13 songs
+set2: 8 songs
+set3: 18 songs
+set4: 16 songs
+
+TOTAL: 55 songs
+```
+
+A successful startup now reports the equivalent of:
+
+```text
+Found 4 theme playlists.
+Loading set1: ...
+set1: loaded 13 songs
+Loading set2: ...
+set2: loaded 8 songs
+Loading set3: ...
+set3: loaded 18 songs
+Loading set4: ...
+set4: loaded 16 songs
+ALL THEME PLAYLISTS PRELOADED: 55 songs across 4 themes
+```
+
+This is important for the demo because playlist discovery happens during backend startup instead of waiting for the user to discover a theme for the first time.
+
+## D. THE OLD 102-SONG GLOBAL PLAYLIST WAS IDENTIFIED AS A BUG
+
+Earlier, the backend was still using an old environment-level playlist variable:
+
+```text
+YOUTUBE_PLAYLIST_URL=...
+```
+
+That caused the backend to repeatedly load an older 102-song playlist even after theme `config.js` files had been changed.
+
+The observed old behavior was:
+
+```text
+Loaded 102 YouTube playlist entries.
+```
+
+The current intended source of truth is theme configuration, not the old single global playlist.
+
+The old environment variable should not be used as the authoritative playlist selection mechanism for the four-theme system.
+
+## E. CURRENT YOUTUBE METADATA FORMAT
+
+A loaded YouTube song entry now follows this structure:
+
+```json
+{
+  "id": "lIp-yNyghDI",
+  "title": "Aaja Sanam Madhur Chandni Men",
+  "artist": "Lata Mangeshkar - Topic",
+  "duration": 266,
+  "thumbnail": "https://i.ytimg.com/vi/lIp-yNyghDI/hqdefault.jpg",
+  "streamUrl": "/stream/youtube/lIp-yNyghDI",
+  "youtubeUrl": "https://www.youtube.com/watch?v=lIp-yNyghDI",
+  "playlistIndex": 0,
+  "themeId": "set1"
+}
+```
+
+Important fields:
+
+- `id` → stable YouTube video ID
+- `title` → YouTube title
+- `artist` → uploader/artist metadata where available
+- `duration` → track duration metadata
+- `thumbnail` → YouTube artwork
+- `streamUrl` → backend proxy URL
+- `youtubeUrl` → original YouTube watch URL
+- `playlistIndex` → position within the theme playlist
+- `themeId` → owning visual/theme playlist
+
+The frontend can therefore identify and stream a song without depending on local filenames or local song IDs.
+
+## F. CURRENT YOUTUBE STREAMING MODEL
+
+Playback flow:
+
+```text
+React currentSong.id
+        ↓
+/stream/youtube/<videoId>
+        ↓
+Express route
+        ↓
+yt-dlp child process
+        ↓
+YouTube audio stream
+        ↓
+Node HTTP response
+        ↓
+HTMLAudioElement
+```
+
+The application is designed to stream rather than permanently download the YouTube audio into the project's media folder.
+
+The `/audio/:filename` route remains for local mode and must not be removed.
+
+## G. THEME SWITCHING REQUIREMENT
+
+The intended theme-switch behavior is now:
+
+```text
+Set 1 active
+   ↓
+user selects Set 2
+   ↓
+stop current audio
+   ↓
+pause/reset audio element
+   ↓
+activate Set 2 playlist already loaded in memory
+   ↓
+select Set 2 entry
+   ↓
+load /stream/youtube/<set2VideoId>
+   ↓
+new track is ready to play
+```
+
+The system should not re-run playlist discovery every time the user changes the theme because the four playlists are already preloaded at backend startup.
+
+## H. LYRICS IMPLEMENTATION
+
+Lyrics are now connected to the YouTube metadata/stream workflow through:
+
+```text
+server/services/youtubeLyrics.js
+```
+
+and:
+
+```text
+GET /api/youtube-lyrics/:videoId
+```
+
+The intended pipeline is:
+
+```text
+YouTube video ID
+   ↓
+yt-dlp metadata
+   ↓
+subtitles / automatic captions
+   ↓
+subtitle retrieval
+   ↓
+VTT/SRT parsing
+   ↓
+plainText + timed lines
+   ↓
+MongoDB Lyrics document
+   ↓
+React lyrics state
+   ↓
+LyricsPanel
+```
+
+### Important lyrics behavior
+
+Not every song is expected to contain lyrics or a usable subtitle track.
+
+Therefore:
+
+```text
+available = true
+```
+means usable lyrics were found.
+
+```text
+available = false
+```
+means no usable lyric/subtitle source was found for that video.
+
+A null result for one song is not itself proof of a broken lyrics system.
+
+The correct validation method is to test multiple songs, including at least one that is known or likely to have lyrics.
+
+## I. LYRICS + MONGODB
+
+When lyrics are successfully fetched, the backend can persist:
+
+- YouTube video ID
+- language
+- source
+- sync status
+- plain-text lyrics
+- timed lyric lines
+- last synchronization time
+
+This allows lyrics to become persistent application metadata instead of being rendered only as a temporary UI value.
+
+## J. THEME ASSETS
+
+The current theme asset structure is:
+
+```text
+client/src/themes/set1/
+client/src/themes/set2/
+client/src/themes/set3/
+client/src/themes/set4/
+```
+
+Set 2:
+
+```text
+background.jpg
+hero.png
+config.js
+```
+
+Set 3:
+
+```text
+background.jpg
+hero.png
+config.js
+```
+
+Set 4:
+
+```text
+background.jpg
+hero.png
+config.js
+```
+
+Set 3 uses a portrait-oriented source image and requires theme-specific handling so it presents correctly inside the landscape full-screen UI. This should be handled only for Set 3 and not by globally rotating every theme image.
+
+## K. CURRENT API SURFACE FOR THE MULTI-THEME SYSTEM
+
+Important current/target endpoints include:
+
+```text
+GET /api/db/status
+GET /api/all-playlists
+GET /api/youtube-playlist?themeId=set1
+GET /api/youtube-playlist?themeId=set2
+GET /api/youtube-playlist?themeId=set3
+GET /api/youtube-playlist?themeId=set4
+GET /api/now-playing
+GET /api/youtube-lyrics/:videoId
+GET /stream/youtube/:videoId
+```
+
+Additional MongoDB endpoints exist for persistent data such as themes, playlists, songs, lyrics, history, preferences, sessions, favorites, settings, and events.
+
+## L. WHAT IS NOW STORED VERSUS WHAT IS LIVE
+
+### Stored/persistent data
+
+MongoDB is appropriate for:
+
+- playlist metadata
+- song metadata
+- theme metadata
+- lyrics
+- users
+- preferences
+- favorites
+- listening history
+- sessions
+- analytics/play events
+
+### Live/runtime data
+
+Application memory/runtime is appropriate for:
+
+- active playlist state
+- current selected index
+- currently playing video ID
+- live stream process
+- HTMLAudioElement state
+- live listener count
+- transient Socket.io connections
+
+This separation keeps the database useful without turning it into the streaming engine.
+
+## M. UPDATED LEARNING OUTCOME
+
+After the latest implementation, the project demonstrates substantially more than a basic React + Express demo.
+
+A student can study:
+
+1. React component/state management
+2. Browser audio APIs
+3. REST API design
+4. Express routing and middleware
+5. Node.js child processes
+6. yt-dlp integration
+7. live streaming through a server proxy
+8. MongoDB and Mongoose persistence
+9. data modeling and collection relationships
+10. theme-driven configuration
+11. multi-playlist loading
+12. caching/in-memory runtime state
+13. Socket.io event architecture
+14. environment configuration
+15. lyrics/subtitle extraction and parsing
+16. error handling and service boundaries
+17. frontend/backend separation
+18. static assets and responsive CSS
+
+## N. FINAL UPDATED ARCHITECTURE
+
+```text
+                         ┌──────────────────────┐
+                         │       React UI       │
+                         │      + Vite          │
+                         └──────────┬───────────┘
+                                    │
+                         REST / audio requests
+                                    │
+                         ┌──────────▼───────────┐
+                         │   Node.js + Express  │
+                         └───────┬───────┬──────┘
+                                 │       │
+                        Mongoose │       │ child process
+                                 │       │
+                    ┌────────────▼──┐    ▼
+                    │    MongoDB    │  yt-dlp
+                    │  persistence  │    │
+                    └───────────────┘    ▼
+                                      YouTube
+
+                         ┌──────────────────────┐
+                         │      Socket.io       │
+                         │ realtime backend     │
+                         └──────────────────────┘
+```
+
+## O. CURRENT PROJECT STATUS SUMMARY
+
+Completed:
+
+- React frontend
+- Vite build system
+- Express backend
+- Node.js runtime
+- YouTube playlist loading
+- four theme playlists
+- 55 currently verified playlist entries across four themes
+- YouTube metadata extraction
+- YouTube stream proxy
+- MongoDB local persistence
+- Mongoose model layer
+- lyrics endpoint and subtitle parsing path
+- theme-specific asset folders
+- local audio route retained
+- Socket.io backend retained
+- theme-specific playlist configuration
+
+Remaining/verification work is limited to:
+
+- final confirmation of browser audio playback for every theme
+- final confirmation that theme switching stops the old audio and selects the new playlist immediately
+- verification that lyrics appear for songs where captions are actually available
+- small final CSS adjustments
+- final cleanup of deprecated/legacy global playlist references if still present
+
+The project should now be treated as a MERN-based YouTube streaming music player with theme-specific playlists and MongoDB persistence.

@@ -1,0 +1,14 @@
+import React from 'react';
+
+export default function LyricsPanel({ lyrics, theme }) {
+  return (
+    <div className="lyrics-panel">
+      <div className="lyrics-header">Lyrics</div>
+      {lyrics ? (
+        <div className="lyrics-content">{lyrics}</div>
+      ) : (
+        <div className="lyrics-empty">Lyrics unavailable</div>
+      )}
+    </div>
+  );
+}

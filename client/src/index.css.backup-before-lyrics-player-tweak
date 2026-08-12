@@ -1,0 +1,753 @@
+﻿* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html {
+  background: #05070f;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #05070f;
+  color: #f5f1e8;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* =========================================================
+   BACKGROUND
+   ========================================================= */
+
+.theme-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0.96;
+}
+
+.theme-background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  filter: saturate(0.9) contrast(1.08);
+}
+
+.theme-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* =========================================================
+   THEME SHELL
+   ========================================================= */
+
+.theme-shell {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.theme-shell.theme-transitioning::after {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  z-index: 20;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 8% 8%,
+      rgba(255, 255, 255, 0.16),
+      transparent 24%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0) 48%
+    );
+  animation: theme-morph 0.52s ease-out forwards;
+}
+
+@keyframes theme-morph {
+  from {
+    transform: translate3d(-2%, -2%, 0) scale(1.04);
+    opacity: 1;
+  }
+
+  to {
+    transform: translate3d(10%, 10%, 0) scale(1.08);
+    opacity: 0;
+  }
+}
+
+/* =========================================================
+   MAIN CANVAS
+   ========================================================= */
+
+.theme-shell > .app-shell {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* =========================================================
+   TOP STATUS
+   ========================================================= */
+
+.top-status-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  height: 0;
+  width: 100%;
+  pointer-events: none;
+  color: rgba(245, 241, 232, 0.88);
+}
+
+.top-status-group {
+  position: absolute;
+  top: clamp(18px, 3.2vh, 32px);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.top-left {
+  left: clamp(24px, 5vw, 76px);
+}
+
+.top-center {
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.72rem, 0.8vw, 0.9rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.top-right {
+  right: clamp(24px, 5vw, 76px);
+}
+
+.top-status-time {
+  font-size: clamp(0.72rem, 0.85vw, 0.92rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.92);
+}
+
+.theme-switcher-button {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0.58rem 0.82rem;
+  background: rgba(8, 12, 20, 0.72);
+  color: #f5f1e8;
+  font-size: clamp(0.66rem, 0.72vw, 0.78rem);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.theme-switcher-button:hover {
+  background: rgba(8, 12, 20, 0.88);
+  transform: translateY(-1px);
+}
+
+.status-badge {
+  color: #63d391;
+  margin-right: 0.15rem;
+}
+
+.source-label {
+  font-size: clamp(0.72rem, 0.8vw, 0.9rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.85);
+}
+
+/* =========================================================
+   THEME PICKER
+   ========================================================= */
+
+.theme-picker-panel {
+  position: absolute;
+  top: calc(clamp(18px, 3.2vh, 32px) + 42px);
+  left: clamp(24px, 5vw, 76px);
+  z-index: 15;
+  display: grid;
+  gap: 8px;
+  width: min(230px, calc(100vw - 48px));
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  background: rgba(10, 12, 18, 0.92);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+}
+
+.theme-picker-item {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.7rem 0.82rem;
+  text-align: left;
+  background: transparent;
+  color: #f5f1e8;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  transition: background 0.2s ease;
+}
+
+.theme-picker-item:hover,
+.theme-picker-item.active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+
+.theme-main-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* =========================================================
+   LEFT COPY / TITLE
+   ========================================================= */
+
+.theme-copy-column {
+  position: absolute;
+  left: clamp(34px, 6vw, 96px);
+  top: clamp(130px, 28vh, 280px);
+  width: min(38vw, 520px);
+  display: grid;
+  gap: clamp(14px, 2vh, 24px);
+  pointer-events: none;
+}
+
+.theme-text-block {
+  display: grid;
+  gap: clamp(7px, 1vh, 12px);
+}
+
+.theme-headline {
+  display: grid;
+  gap: 0;
+  text-transform: uppercase;
+}
+
+.theme-headline-line {
+  margin: 0;
+  font-size: clamp(2.4rem, 4.3vw, 4.5rem);
+  line-height: 0.9;
+  letter-spacing: 0.075em;
+  font-weight: 850;
+  text-wrap: balance;
+}
+
+.theme-headline-accent {
+  color: var(--accent-color, #f5f1e8);
+}
+
+.theme-tagline {
+  max-width: 500px;
+  margin: 0;
+  color: rgba(245, 241, 232, 0.88);
+  font-size: clamp(0.76rem, 1vw, 0.98rem);
+  line-height: 1.45;
+}
+
+.theme-description {
+  max-width: 460px;
+  color: rgba(245, 241, 232, 0.66);
+  font-size: clamp(0.7rem, 0.9vw, 0.84rem);
+  line-height: 1.45;
+}
+
+/* =========================================================
+   LYRICS
+   ========================================================= */
+
+.lyrics-panel {
+  width: min(34vw, 470px);
+  height: clamp(130px, 19vh, 210px);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.6rem;
+  padding: clamp(0.85rem, 1.2vw, 1.15rem);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(8, 12, 18, 0.62);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.lyrics-header {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: rgba(245, 241, 232, 0.78);
+}
+
+.lyrics-content,
+.lyrics-empty {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  font-size: clamp(0.78rem, 0.95vw, 0.92rem);
+  line-height: 1.65;
+  color: rgba(245, 241, 232, 0.88);
+  scrollbar-width: thin;
+}
+
+.lyrics-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.lyrics-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.theme-hero-column {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  right: auto;
+  width: min(18vw, 360px);
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.theme-hero-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.theme-hero-card {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  transition: none;
+}
+
+.theme-hero-card.theme-hero-active {
+  transform: none;
+  box-shadow: none;
+}
+
+.theme-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: hero-slow-rotation 28s linear infinite;
+  will-change: transform;
+  display: block;
+}
+
+@keyframes hero-slow-rotation {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   PLAYER FOOTER
+   ========================================================= */
+
+.theme-player-zone {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.music-player-card {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(70px, 9vh, 100px);
+  transform: translateX(-50%);
+
+  width: min(52vw, 684px);
+  height: clamp(126px, 14vh, 152px);
+
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(0.7rem, 1.2vw, 1rem);
+  align-items: center;
+
+  padding: clamp(0.7rem, 1.15vw, 1rem);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+
+  background: rgba(10, 14, 24, 0.72);
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(var(--player-blur, 16px));
+
+  pointer-events: auto;
+}
+
+/* Album artwork */
+.player-artwork {
+  width: clamp(64px, 5.5vw, 84px);
+  height: clamp(64px, 5.5vw, 84px);
+  min-width: clamp(64px, 5.5vw, 84px);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.player-artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.player-artwork-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: rgba(245, 241, 232, 0.58);
+  font-size: 0.74rem;
+}
+
+/* Song information */
+.player-details {
+  min-width: 0;
+  display: grid;
+  gap: 0.38rem;
+}
+
+.player-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: clamp(0.95rem, 1.45vw, 1.3rem);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.player-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: rgba(245, 241, 232, 0.7);
+  font-size: clamp(0.68rem, 0.82vw, 0.82rem);
+}
+
+/* Progress */
+.player-progress-group {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.player-progress-group span {
+  color: rgba(245, 241, 232, 0.68);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.player-progress {
+  width: 100%;
+  height: 4px;
+  margin: 0;
+
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+  outline: none;
+  cursor: pointer;
+}
+
+.player-progress::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50%;
+  background: #f5f1e8;
+}
+
+/* Controls */
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-control-button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5f1e8;
+
+  font-size: 0.78rem;
+}
+
+.player-control-play {
+  width: 50px;
+  height: 50px;
+
+  background: #f5f1e8;
+  color: #111827;
+
+  font-size: 0.9rem;
+}
+
+/* Start Engine */
+.start-engine-button {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(24px, 3.8vh, 36px);
+
+  transform: translateX(-50%);
+
+  min-width: 168px;
+  height: 38px;
+
+  padding: 0 1.45rem;
+
+  border: 0;
+  border-radius: 999px;
+
+  color: #08101f;
+
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  pointer-events: auto;
+}
+
+/* Status */
+.theme-status-copy {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(6px, 1vh, 10px);
+
+  transform: translateX(-50%);
+
+  max-width: min(70vw, 700px);
+
+  color: rgba(245, 241, 232, 0.58);
+  font-size: 0.64rem;
+
+  text-align: center;
+  white-space: nowrap;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* =========================================================
+   TABLET / SMALL LAPTOP
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .theme-copy-column {
+    width: min(40vw, 430px);
+    top: 24vh;
+  }
+
+  .theme-hero-column {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  right: auto;
+  width: min(24vw, 360px);
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* =========================================================
+   SMALL TABLETS
+   ========================================================= */
+
+@media (max-width: 820px) {
+  .top-center {
+    display: none;
+  }
+
+  .theme-copy-column {
+    left: 24px;
+    top: 17vh;
+    width: min(56vw, 430px);
+  }
+
+  .theme-hero-column {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  right: auto;
+  width: min(24vw, 360px);
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 620px) {
+  .top-left {
+    left: 16px;
+  }
+
+  .top-right {
+    right: 16px;
+  }
+
+  .top-status-time {
+    display: none;
+  }
+
+  .theme-switcher-button {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .theme-copy-column {
+    left: 18px;
+    top: 13vh;
+    width: calc(100vw - 36px);
+    gap: 10px;
+  }
+
+  .theme-headline-line {
+    font-size: clamp(1.8rem, 10vw, 3rem);
+  }
+
+  .theme-tagline {
+    max-width: 80%;
+    font-size: 0.7rem;
+  }
+
+  .theme-description {
+    display: none;
+  }
+
+  .lyrics-panel {
+    width: min(100%, 340px);
+    height: 14vh;
+    min-height: 94px;
+    padding: 0.8rem;
+    border-radius: 16px;
+  }
+
+  .lyrics-header {
+    font-size: 0.62rem;
+  }
+
+  .lyrics-content,
+  .lyrics-empty {
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+
+  .theme-hero-column {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  right: auto;
+  width: min(24vw, 360px);
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+

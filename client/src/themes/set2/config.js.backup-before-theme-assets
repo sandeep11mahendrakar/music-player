@@ -1,0 +1,21 @@
+import background from './background.svg';
+import hero from './hero.svg';
+
+const config = {
+  id: 'set2',
+  name: 'Midnight Lounge',
+  playlistUrl: 'https://music.youtube.com/playlist?list=PL2',
+  playlistLabel: 'Noir lounge set',
+  background,
+  hero,
+  customTitle: 'MIDNIGHT',
+  customSubtext: 'LOUNGE',
+  tagline: 'A slow-motion after-hours atmosphere for immersive listening.',
+  playerBlur: '12px',
+  accent: '#8fc1ff',
+  overlay: 'rgba(4, 8, 18, 0.68)',
+  overlayStrength: 0.78,
+  description: 'Soft neon shadows and cinematic cool tones.',
+};
+
+export default config;

@@ -1,0 +1,13 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111111" />
+      <stop offset="100%" stop-color="#444444" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg1)" />
+  <circle cx="900" cy="240" r="210" fill="rgba(255,255,255,0.06)" />
+  <circle cx="280" cy="520" r="200" fill="rgba(255,255,255,0.08)" />
+  <text x="120" y="150" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="72" letter-spacing="12">BOLLYWOOD</text>
+  <text x="120" y="230" fill="#d4d4d4" font-family="Arial, Helvetica, sans-serif" font-size="32" letter-spacing="8">Vintage cinematics</text>
+</svg>

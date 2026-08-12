@@ -1,0 +1,21 @@
+import background from './background.svg';
+import hero from './hero.svg';
+
+const config = {
+  id: 'set4',
+  name: 'Urban Noir',
+  playlistUrl: 'https://music.youtube.com/playlist?list=PL4',
+  playlistLabel: 'City edge mix',
+  background,
+  hero,
+  customTitle: 'URBAN',
+  customSubtext: 'NOIR',
+  tagline: 'A polished metropolitan score for late-night listening.',
+  playerBlur: '10px',
+  accent: '#d5d5ff',
+  overlay: 'rgba(6, 8, 14, 0.66)',
+  overlayStrength: 0.8,
+  description: 'Crisp modern city atmosphere with restraint and glow.',
+};
+
+export default config;
