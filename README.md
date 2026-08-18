@@ -1,10 +1,8 @@
 # Deluxe music player 
 
-**_note_:
-       it is a vibe coded project not a serious project, i have made as i saw the insta trend of music player so i just made it and i have made it in such way that we have dyanamic themes so i have made a 4 sets for now u can as many as want it is a full _mern stack project_. it is production grade just it is need a few optimization then i we can host it on the web i will update it then we can have a site working for a *MERN stack* in the unis u can use it it is pretty good for the web development subjects**
 
         
-**_note_: It is a vibe-coded project, not a serious project. I made it because I saw the Instagram trend of a music player, so I just built it. I designed it in such a way that it has dynamic themes; I have made 4 sets for now, but you can add as many as you want. It is a _full MERN stack project_. It is production-grade, but it just needs a few optimizations. Once those are done, we can host it on the web. I will update it so we can have a working site for the MERN stack. You can use it in universities; it is pretty good for web development subjects**
+**_note_: It is a vibe-coded project, not a serious project. I made it because I saw the Instagram trend of a music player, so I just built it. I designed it in such a way that it has dynamic themes; I have made 4 sets for now, but you can add as many as you want. It is a _full MERN stack project_. It is production-grade, but it just needs a few optimizations. Once those are done, we can host it on the web. I will update it so we can have a working site for the MERN stack. You can use it in universities project demos it is good for such things only; it is pretty good for web development subjects**
 
 
 
