@@ -3,6 +3,25 @@
 Deluxe Saloon is a full-screen, synchronized music-player web application built with React, Node.js, Express, Socket.io, yt-dlp, and MongoDB/Mongoose.
 
 The application supports four visual themes, each with its own YouTube playlist, theme-specific artwork, live playlist metadata, YouTube audio streaming, lyrics retrieval where available, and persistent MongoDB metadata.
+
+## Theme Previews
+
+### Set 1 — Black & White Bollywood
+
+![Set 1 Preview](./Picture1.png)
+
+### Set 2 — Sita Ramam / Telugu
+
+![Set 2 Preview](./Picture2.png)
+
+### Set 3 — Rave Girls
+
+![Set 3 Preview](./Picture3.png)
+
+### Set 4 — Fight Mode / Boxing Motivation
+
+![Set 4 Preview](./Picture4.png)
+
 ## Theme Asset Source Paths
 
 The following theme preview/source images are stored in the repository root:
@@ -13,6 +32,7 @@ The following theme preview/source images are stored in the repository root:
 | Set 2 | `./Picture2.png` |
 | Set 3 | `./Picture3.png` |
 | Set 4 | `./Picture4.png` |
+
 ## Stack
 
 - React + Vite — frontend UI and browser audio control
@@ -26,6 +46,10 @@ The following theme preview/source images are stored in the repository root:
 
 ```text
 music-player-main/
+├── Picture1.png
+├── Picture2.png
+├── Picture3.png
+├── Picture4.png
 ├── client/
 │   ├── public/
 │   └── src/
@@ -201,6 +225,7 @@ Test-NetConnection 127.0.0.1 -Port 27017 | Select-Object TcpTestSucceeded
 
 ```powershell
 cd "C:\Users\sandeep\pes\temp\music-player-main\music-player-main\server"
+npm install
 npm start
 ```
 
@@ -212,6 +237,7 @@ In another terminal:
 
 ```powershell
 cd "C:\Users\sandeep\pes\temp\music-player-main\music-player-main\client"
+npm install
 npm run dev
 ```
 
@@ -220,6 +246,40 @@ Open:
 ```text
 http://localhost:5173
 ```
+
+## Fresh Installation Requirements
+
+Install these software dependencies before running the application:
+
+- Node.js + npm
+- MongoDB Community Server
+- yt-dlp
+
+Example Windows installation:
+
+```powershell
+winget install --id MongoDB.Server -e --accept-source-agreements --accept-package-agreements
+```
+
+Install yt-dlp using your preferred Windows package manager, then verify:
+
+```powershell
+yt-dlp --version
+```
+
+The project itself installs its JavaScript dependencies with `npm install` separately inside `client` and `server`.
+
+### Environment
+
+Create `server/.env` locally:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/deluxe_saloon
+USE_YOUTUBE_STREAM=true
+PORT=4000
+```
+
+Do not commit the real `.env` file or database credentials.
 
 ## Useful Verification
 
