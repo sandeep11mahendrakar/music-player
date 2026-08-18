@@ -3,7 +3,16 @@
 Deluxe Saloon is a full-screen, synchronized music-player web application built with React, Node.js, Express, Socket.io, yt-dlp, and MongoDB/Mongoose.
 
 The application supports four visual themes, each with its own YouTube playlist, theme-specific artwork, live playlist metadata, YouTube audio streaming, lyrics retrieval where available, and persistent MongoDB metadata.
+## Theme Asset Source Paths
 
+The following theme preview/source images are stored in the repository root:
+
+| Theme | GitHub Asset |
+|---|---|
+| Set 1 | `./Picture1.png` |
+| Set 2 | `./Picture2.png` |
+| Set 3 | `./Picture3.png` |
+| Set 4 | `./Picture4.png` |
 ## Stack
 
 - React + Vite — frontend UI and browser audio control
