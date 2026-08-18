@@ -2,7 +2,7 @@
 
 
 
-Deluxe Saloon is a full-screen, synchronized music-player web application built with React, Node.js, Express, Socket.io, yt-dlp, and MongoDB/Mongoose.
+Deluxe music player is a full-screen, synchronized music-player web application built with React, Node.js, Express, Socket.io, yt-dlp, and MongoDB/Mongoose.
 
 The application supports four visual themes, each with its own YouTube playlist, theme-specific artwork, live playlist metadata, YouTube audio streaming, lyrics retrieval where available, and persistent MongoDB metadata.
 
