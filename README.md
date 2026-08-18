@@ -1,4 +1,6 @@
-# Deluxe Saloon
+# Deluxe music player 
+
+note it is a vibe coded project not a serious project i have made as i saw the insta trend of music player so i just made it and i have made it in such way that we have dyanamic themes so i have made a 4 sets for now u can as many as want it is a full mern stack project it is production grade just it is need a few optimization then i we can host it on the web i will update it then we can have a site working for a *MERN stack* in the unis u can use it it is pretty good for the web development subjects
 
 Deluxe Saloon is a full-screen, synchronized music-player web application built with React, Node.js, Express, Socket.io, yt-dlp, and MongoDB/Mongoose.
 
@@ -22,16 +24,6 @@ The application supports four visual themes, each with its own YouTube playlist,
 
 ![Set 4 Preview](./Picture4.png)
 
-## Theme Asset Source Paths
-
-The following theme preview/source images are stored in the repository root:
-
-| Theme | GitHub Asset |
-|---|---|
-| Set 1 | `./Picture1.png` |
-| Set 2 | `./Picture2.png` |
-| Set 3 | `./Picture3.png` |
-| Set 4 | `./Picture4.png` |
 
 ## Stack
 
